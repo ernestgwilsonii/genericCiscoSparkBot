@@ -1,0 +1,47 @@
+{
+  "name": "ciscosparkbot",
+  "version": "1.0.0",
+  "description": "ChatOps Cisco Spark Bot",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "test": "echo \"Error: no tests specified or built yet\" && exit 1"
+  },
+  "keywords": [
+    "chatops",
+    "spark",
+    "ciscospark",
+    "bot"
+  ],
+  "author": {
+    "email": "ErnestGWilsonII@gmail.com",
+    "name": "Ernest G. Wilson II",
+    "url": "https://github.com/ernestgwilsonii"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ernestgwilsonii/genericCiscoSparkBot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ernestgwilsonii/genericCiscoSparkBot/issues",
+    "email": "ErnestGWilsonII@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.5.0",
+    "botkit": "^0.6.4",
+    "cheerio": "^1.0.0-rc.2",
+    "child_process": "^1.0.2",
+    "ciscospark": "^1.12.3",
+    "ciscospark-websocket-events": "^1.2.0",
+    "lodash": "^4.17.4",
+    "moment-timezone": "^0.5.13",
+    "node-fetch": "^1.7.3",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2"
+  },
+  "devDependencies": {
+    "cross-env": "^5.0.5",
+    "rimraf": "^2.6.2"
+  }
+}
