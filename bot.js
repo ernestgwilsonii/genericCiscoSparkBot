@@ -19,6 +19,7 @@ ensureConfig();
 
 const accessToken = process.env.SPARK_TOKEN;
 const { chatOpsLogger } = require('./lib/chatOpsLogger.js');
+const { zipCodeLookup } = require('./lib/zipCodeLookup.js');
 const { ciscoSparkGetPersonDetails } = require('./lib/ciscoSparkGetPersonDetails.js');
 const moment = require('moment-timezone');
 const sparkWebSocket = require('ciscospark-websocket-events')
@@ -136,6 +137,106 @@ controller.hears(['hello', 'greetings', 'hi'], 'direct_message,direct_mention', 
 
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+// zipcode lookuup //
+/////////////////////
+controller.hears(['zipcode lookup', 'zip lookup'], 'direct_message,direct_mention', function (bot, message) {
+
+    message.command = "zipcode lookuup"; // <--Set this value for acurate logging and reporting!
+
+    let sparkMessage = []; // Initialize a clean message to start
+    const horizontalLine = "---\n";
+    const horizontalLineClose = "\n---\n";
+
+    // Read the human's input
+    var allArguments = message.text.replace(/\s+/g, " ");
+    var Arg = allArguments.split(" ");
+    // Argument chatDebugging
+    if (chatDebug === true) { console.log("AllArguments: " + allArguments); } // See value of allArguments
+    if (chatDebug === true) { console.log("Arg[0]: " + Arg[0]); } // See value of Arg[0]
+    if (chatDebug === true) { console.log("Arg[1]: " + Arg[1]); } // See value of Arg[1]
+    if (chatDebug === true) { console.log("Arg[2]: " + Arg[2]); } // See value of Arg[2]
+    if (chatDebug === true) { console.log("Arg[3]: " + Arg[3]); } // See value of Arg[3]
+    if (chatDebug === true) { console.log("Arg[4]: " + Arg[4]); } // See value of Arg[4]
+    // Bot responds to the human:
+    if (Arg[4] !== undefined | Arg[2] == undefined | Arg[3] == undefined) {
+        // Bad human! This command requires exactly two arguments!
+        bot.reply(message, 'Sorry, **' + message.command + '** requires exactly **two** values! Please try using my help if you keep getting this message. [Looking for Country Codes? Click here!](http://zippopotam.us/#where)');
+        return;
+    }
+    // REGEX Validator
+    let thisValue1 = Arg[2];
+    let re1 = /\w/; // Use regex to look for unsafe characters
+    let detector1 = thisValue1.match(re1);
+    if (!detector1) {
+        message.logLevel = "WARN";
+        let thisWarning = 'Sorry, **' + message.command + '** requires **valid** values! Please try using my help if you keep getting this message. [Looking for Country Codes? Click here!](http://zippopotam.us/#where)'
+        sparkMessage.push(thisWarning);
+        bot.reply(message, sparkMessage.join(''));
+        chatOpsLogger(message, sparkMessage.join(''));
+        return;
+    };
+    let thisValue2 = Arg[3];
+    let re2 = /\w/; // Use regex to look for unsafe characters
+    let detector2 = thisValue1.match(re2);
+    if (!detector2) {
+        message.logLevel = "WARN";
+        let thisWarning = 'Sorry, **' + message.command + '** requires **valid** values! Please try using my help if you keep getting this message...'
+        sparkMessage.push(thisWarning);
+        bot.reply(message, sparkMessage.join(''));
+        chatOpsLogger(message, sparkMessage.join(''));
+        return;
+    };
+    botAck = "Just a moment please while I perform a **" + message.command + "** for **" + Arg[2] + " " + Arg[3] + "**";
+    bot.reply(message, botAck);
+
+    // Do the needful!
+    ciscoSparkGetPersonDetails(message, function (error, person) {
+        if (error) {
+            message.logLevel = "ERROR";
+            let thisReply = "Bummer... " + error;
+            sparkMessage.push(thisReply);
+            bot.reply(message, sparkMessage.join(''));
+            chatOpsLogger(message, sparkMessage.join(''));
+        } else {
+            zipCodeLookup(Arg[2], Arg[3], function (error, results) {
+                if (error) {
+                    message.logLevel = "ERROR";
+                    let thisReply = "Bummer... " + error;
+                    sparkMessage.push(thisReply);
+                    bot.reply(message, sparkMessage.join(''));
+                    chatOpsLogger(message, sparkMessage.join(''));
+                } else {
+                    sparkMessage.push("\n" + horizontalLine);
+                    if (results == "404") {
+                        message.logLevel = "WARN";
+                        let thisReply = "Hi " + person.firstName + ", here are the results of that zipcode lookup:\n\n**" + Arg[2] + "** could not be found, sorry!";
+                        sparkMessage.push(thisReply);
+                    } else {
+                        let zipCountry = results.country;
+                        let zipPlace = results.places[0]['place name'];
+                        let zipState = results.places[0]['state'];
+                        let zipPostCode = results['post code'];
+                        let zipLatitude = results.places[0]['latitude'];
+                        let zipLongitude = results.places[0]['longitude'];
+                        let thisReply = "Hi " + person.firstName + ", here are the results of that zipcode lookup:\n\n**" + zipPostCode + "**\n\n[" + zipPlace + " " + zipState + " " + zipPostCode + " " + zipCountry + "](http://www.google.com/maps/place/"+zipLatitude+","+zipLongitude+")";
+                        sparkMessage.push(thisReply);
+                    }
+                    sparkMessage.push("\n" + horizontalLineClose);
+                    bot.reply(message, sparkMessage.join(''));
+                    chatOpsLogger(message, sparkMessage.join(''));
+                }
+            })
+        }
+    });
+});
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // BOT HELP SECTION //
 //////////////////////
@@ -144,13 +245,16 @@ controller.hears(['hello', 'greetings', 'hi'], 'direct_message,direct_mention', 
 const sparkBotHelpDirectMention = "Here are the things that I know how to do via **@direct mention** when you chat with me in a **group** space: \n\n \
 ``` \n \
 @YourBotsName help                       <-- Displays this help message\n \
+@YourBotsName zipcode lookup US zip      <-- Lookup a zipcode using a Country Code and Zipcode\n \
 Hint: To command a bot in a channel, you need to direct mention the bot's name so it turns blue. \n \
-``` \n";
+``` \n \
+[Need a two letter Country Code click here](http://zippopotam.us/#where)";
 
 // DIRECT MESSAGE HELP (PRIVATE MESSAGE) //
 const sparkBotHelpDirectMessage = "Here are the things that I know how to do via **direct message** when you chat with me privately: \n\n \
 ``` \n \
 help \n \
+zipcode lookup US zip \n \
 ``` \n";
 
 ////////////////////////////
