@@ -58,6 +58,16 @@ controller.hears(['hello', 'greetings', 'hi'], 'direct_message,direct_mention', 
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// ping TARGET //
+/////////////////
+controller.hears('ping', 'direct_message,direct_mention', function (bot, message) {
+    const { chatOps_ping } = require('./chatOps_ping.js');
+    chatOps_ping(bot, message);
+});
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
 // zipcode lookuup //
 /////////////////////
 controller.hears(['zipcode lookup', 'zip lookup'], 'direct_message,direct_mention', function (bot, message) {
@@ -85,7 +95,7 @@ controller.on('direct_message,direct_mention', function (bot, message) {
             bot.reply(message, sparkMessage.join(''));
         } else if (message.raw_message.data.roomType == 'group') {
             if (Arg[0].toUpperCase() !== "HELP") {
-                message.logLevel = 'WARN';
+                message.logLevel = 'WARNING';
             }
             let thisReply = "Hello " + person.firstName + "!\n\n";
             sparkMessage.push(thisReply);
@@ -93,7 +103,7 @@ controller.on('direct_message,direct_mention', function (bot, message) {
             bot.reply(message, sparkMessage.join(''));
         } else if (message.raw_message.data.roomType == 'direct') {
             if (Arg[0].toUpperCase() !== "HELP") {
-                message.logLevel = 'WARN';
+                message.logLevel = 'WARNING';
             }
             let thisReply = "Hello " + person.firstName + "!\n\n";
             sparkMessage.push(thisReply);

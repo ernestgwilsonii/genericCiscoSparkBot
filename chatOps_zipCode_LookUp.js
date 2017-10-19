@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 const accessToken = process.env.SPARK_TOKEN;
-const { chatOpsLogger } = require('./lib/chatOpsLogger.js');
 const { zipCodeLookup } = require('./lib/zipCodeLookup.js');
+const { chatOpsLogger } = require('./lib/chatOpsLogger.js');
 const { ciscoSparkGetPersonDetails } = require('./lib/ciscoSparkGetPersonDetails.js');
 const moment = require('moment-timezone');
 const chatDebug = false;
@@ -28,9 +28,11 @@ function chatOps_zipCode_LookUp(bot, message) {
     // Bot responds to the human:
     if (Arg[2] == undefined | Arg[3] == undefined | Arg[4] !== undefined) {
         // Bad human! This command requires exactly two arguments!
-        message.logLevel = "WARN";
+        message.logLevel = "WARNING";
         let thisWarning = 'Sorry, **' + message.command + '** requires exactly **two** values! Please try using my help if you keep getting this message. [Looking for Country Codes? Click here!](http://zippopotam.us/#where)';
-        bot.reply(message, thisWarning);
+        sparkMessage.push(thisWarning);
+        bot.reply(message, sparkMessage.join(''));
+        chatOpsLogger(message, sparkMessage.join(''));
         return;
     }
     // REGEX Validation
@@ -38,7 +40,7 @@ function chatOps_zipCode_LookUp(bot, message) {
     let re1 = /\w/; // regex
     let detector1 = thisValue1.match(re1);
     if (!detector1) {
-        message.logLevel = "WARN";
+        message.logLevel = "WARNING";
         let thisWarning = 'Sorry, **' + message.command + '** requires **valid** values! Please try using my help if you keep getting this message. [Looking for Country Codes? Click here!](http://zippopotam.us/#where)'
         sparkMessage.push(thisWarning);
         bot.reply(message, sparkMessage.join(''));
@@ -49,7 +51,7 @@ function chatOps_zipCode_LookUp(bot, message) {
     let re2 = /\w/; // regex
     let detector2 = thisValue1.match(re2);
     if (!detector2) {
-        message.logLevel = "WARN";
+        message.logLevel = "WARNING";
         let thisWarning = 'Sorry, **' + message.command + '** requires **valid** values! Please try using my help if you keep getting this message...'
         sparkMessage.push(thisWarning);
         bot.reply(message, sparkMessage.join(''));
@@ -78,7 +80,7 @@ function chatOps_zipCode_LookUp(bot, message) {
                 } else {
                     sparkMessage.push("\n" + horizontalLine);
                     if (results == "404") {
-                        message.logLevel = "WARN";
+                        message.logLevel = "WARNING";
                         let thisReply = "Hi " + person.firstName + ", here are the results of that zipcode lookup:\n\n**" + Arg[2] + "** could not be found, sorry!";
                         sparkMessage.push(thisReply);
                     } else {
