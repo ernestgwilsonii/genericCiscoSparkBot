@@ -17,15 +17,15 @@ function chatOps_ping(bot, message) {
     const codeBlockMarkDown = "```\n";
 
     // Read the human's input
-    var AllArguments = message.text.replace(/\s+/g, " ");
-    var Arg = AllArguments.split(" ");
+    const AllArguments = message.text.replace(/\s+/g, " ");
+    const Arg = AllArguments.split(" ");
     // Argument debugging
     if (chatDebug === true) { console.log("AllArguments: " + AllArguments); } // See value of AllArguments
     if (chatDebug === true) { console.log("Arg[0]: " + Arg[0]); } // See value of Arg[0]
     if (chatDebug === true) { console.log("Arg[1]: " + Arg[1]); } // See value of Arg[1]
     if (chatDebug === true) { console.log("Arg[2]: " + Arg[2]); } // See value of Arg[2]
     // Bot responds to human:
-    if ( Arg[1] == undefined | Arg[2] !== undefined ) {
+    if (Arg[1] == undefined | Arg[2] !== undefined) {
         // Bad human! This command requires exactly one argument!
         message.logLevel = "WARNING";
         let thisWarning = 'Sorry, **' + message.command + '** requires exactly **one** target! Please try using my help if you keep getting this message.';
@@ -77,14 +77,26 @@ function chatOps_ping(bot, message) {
 
     // Perform the command via child process exec
     exec(execThisCommand, function (error, stdout, stderr) {
+        if (error) {
+            if (chatDebug === true) { console.log(sparkMessage.join('')); }
+            message.logLevel = "CRITICAL";
+            sparkMessage.push("\n" + horizontalLine);
+            sparkMessage.push("\n" + codeBlockMarkDown);
+            sparkMessage.push(error);
+            sparkMessage.push("\n" + codeBlockMarkDown);
+            sparkMessage.push("\n" + horizontalLineClose);
+            bot.reply(message, sparkMessage.join(''));
+            chatOpsLogger(message, sparkMessage.join(''));
+            return;
+        }
         if (stderr) {
+            if (chatDebug === true) { console.log(sparkMessage.join('')); }
             message.logLevel = "WARNING";
             sparkMessage.push("\n" + horizontalLine);
             sparkMessage.push("\n" + codeBlockMarkDown);
             sparkMessage.push(stderr);
             sparkMessage.push("\n" + codeBlockMarkDown);
             sparkMessage.push("\n" + horizontalLineClose);
-            console.log(sparkMessage.join(''));
             bot.reply(message, sparkMessage.join(''));
             chatOpsLogger(message, sparkMessage.join(''));
             return;

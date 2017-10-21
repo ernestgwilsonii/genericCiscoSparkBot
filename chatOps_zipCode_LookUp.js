@@ -64,7 +64,7 @@ function chatOps_zipCode_LookUp(bot, message) {
     // Do the needful!
     ciscoSparkGetPersonDetails(message, function (error, person) {
         if (error) {
-            message.logLevel = "ERROR";
+            message.logLevel = "CRITICAL";
             let thisReply = "Bummer... " + error;
             sparkMessage.push(thisReply);
             bot.reply(message, sparkMessage.join(''));
